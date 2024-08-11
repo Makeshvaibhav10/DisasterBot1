@@ -1,0 +1,4 @@
+streamlit==1.18.0
+fpdf==1.7.2
+langchain==0.0.48
+langchain-community==0.0.7
