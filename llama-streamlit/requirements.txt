@@ -1,5 +1,0 @@
-streamlit==1.21.0
-fpdf==1.7.2
-langchain==0.0.98
-langchain-community==0.0.18
-requests==2.31.0
