@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        form input[type="text"],
+        form input[type="file"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        form button {
+            padding: 10px 20px;
+            background-color: #1e88e5;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #1565c0;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-message {
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+        .chat-message.user {
+            align-self: flex-start;
+            background-color: #e1f5fe;
+            border: 1px solid #b3e5fc;
+        }
+        .chat-message.assistant {
+            align-self: flex-end;
+            background-color: #f1f8e9;
+            border: 1px solid #dcedc8;
+        }
+        .chat-message p {
+            margin: 0;
+        }
+        #pdfLink {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #pdfLink a {
+            text-decoration: none;
+            color: #1e88e5;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chatbot Interface</h1>
+
+        <!-- PDF Upload Form -->
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="file">Upload PDF:</label>
+            <input type="file" id="file" name="file" accept=".pdf">
+            <button type="submit">Upload</button>
+        </form>
+
+        <!-- Chat Form -->
+        <form id="chatForm">
+            <label for="input">Ask a question:</label>
+            <input type="text" id="input" name="input" required>
+            <button type="submit">Submit</button>
+        </form>
+
+        <!-- Chat History Display -->
+        <div id="chatHistory" class="chat-container"></div>
+
+        <!-- PDF Download Link -->
+        <div id="pdfLink">
+            <a href="#" id="downloadLink">Download PDF</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+            } else {
+                alert(result.error || 'Error uploading file.');
+            }
+        });
+
+        document.getElementById('chatForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const input = document.getElementById('input').value;
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
+            });
+            const result = await response.json();
+            
+            const chatHistory = document.getElementById('chatHistory');
+            
+            // User message
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('chat-message', 'user');
+            userMessage.innerHTML = `<p>${input}</p>`;
+            chatHistory.appendChild(userMessage);
+            
+            // Assistant response
+            if (result.response) {
+                const assistantMessage = document.createElement('div');
+                assistantMessage.classList.add('chat-message', 'assistant');
+                assistantMessage.innerHTML = `<p>${result.response}</p>`;
+                chatHistory.appendChild(assistantMessage);
+            }
+
+            // PDF download link
+            if (result.pdf_file) {
+                const pdfLink = document.getElementById('pdfLink');
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = `/api/download?filename=${encodeURIComponent(result.pdf_file)}`;
+                downloadLink.textContent = `Download PDF: ${result.pdf_file}`;
+                pdfLink.style.display = 'block';
+            }
+
+            document.getElementById('input').value = '';
+        });
+    </script>
+</body>
+</html>
